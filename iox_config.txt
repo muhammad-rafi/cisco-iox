@@ -1,0 +1,142 @@
+iox
+end
+!
+ip access-list extended IOX_NAT_ACL
+permit ip 192.168.100.0 0.0.0.255 any
+exit
+!
+ip nat inside source list IOX_NAT_ACL interface GigabitEthernet 1 overload 
+interface GigabitEthernet1
+ip nat outside 
+exit
+!
+interface virtualportGroup 0 
+ip address 192.168.100.1 255.255.255.0 
+ip nat inside
+exit
+!
+app-hosting appid guestshell
+app-vnic gateway0 virtualportgroup 0 guest-interface 0
+guest-ipaddress 192.168.100.10 netmask 255.255.255.0 
+exit
+!
+app-default-gateway 192.168.100.1 guest-interface 0
+name-server0 8.8.8.8 
+end
+!
+
+guestshell enable  
+
+
+
+cml-dist-rtr01#guestshell run bash
+[guestshell@guestshell ~]$ 
+
+[guestshell@guestshell ~]$ uname -a
+Linux guestshell 5.4.69 #1 SMP Fri Mar 19 21:47:56 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+[guestshell@guestshell ~]$ 
+
+[guestshell@guestshell ~]$ hostname
+guestshell
+
+[guestshell@guestshell ~]$ cat /etc/*-release
+CentOS Stream release 8
+NAME="CentOS Stream"
+VERSION="8"
+ID="centos"
+ID_LIKE="rhel fedora"
+VERSION_ID="8"
+PLATFORM_ID="platform:el8"
+PRETTY_NAME="CentOS Stream 8"
+ANSI_COLOR="0;31"
+CPE_NAME="cpe:/o:centos:centos:8"
+HOME_URL="https://centos.org/"
+BUG_REPORT_URL="https://bugzilla.redhat.com/"
+REDHAT_SUPPORT_PRODUCT="Red Hat Enterprise Linux 8"
+REDHAT_SUPPORT_PRODUCT_VERSION="CentOS Stream"
+CentOS Stream release 8
+CentOS Stream release 8
+[guestshell@guestshell ~]$ 
+
+[guestshell@guestshell ~]$ dohost "show ip interface brief"
+Interface              IP-Address      OK? Method Status                Protocol
+GigabitEthernet1       10.100.5.205    YES NVRAM  up                    up      
+GigabitEthernet2       192.168.5.12    YES NVRAM  up                    up      
+GigabitEthernet3       192.168.5.14    YES NVRAM  up                    up      
+GigabitEthernet4       192.168.5.3     YES NVRAM  up                    up      
+GigabitEthernet5       192.168.5.7     YES NVRAM  up                    up      
+GigabitEthernet6       192.168.5.10    YES NVRAM  up                    up      
+GigabitEthernet7       unassigned      YES NVRAM  administratively down down    
+GigabitEthernet8       unassigned      YES NVRAM  administratively down down    
+Loopback0              10.0.0.5        YES NVRAM  up                    up      
+VirtualPortGroup0      192.168.100.1   YES NVRAM  up                    up      
+
+[guestshell@guestshell ~]$ 
+[guestshell@guestshell ~]$ dohost "show version | inc Version"
+Cisco IOS XE Software, Version 17.05.01a
+Cisco IOS Software [Bengaluru], Virtual XE Software (X86_64_LINUX_IOSD-UNIVERSALK9-M), Version 17.5.1a, RELEASE SOFTWARE (fc3)
+licensed under the GNU General Public License ("GPL") Version 2.0.  The
+software code licensed under GPL Version 2.0 is free software that comes
+GPL code under the terms of GPL Version 2.0.  For more details, see the
+
+[guestshell@guestshell ~]$ 
+
+[guestshell@guestshell ~]$ sudo tail -n 10 /var/log/messages 
+Dec 13 11:44:39 localhost systemd[1]: Started Session c4 of user root.
+Dec 13 11:44:39 localhost systemd-logind[18]: New session c4 of user root.
+Dec 13 11:44:39 localhost systemd[1]: session-c4.scope: Succeeded.
+Dec 13 11:44:39 localhost systemd-logind[18]: Session c4 logged out. Waiting for processes to exit.
+Dec 13 11:44:39 localhost systemd-logind[18]: Removed session c4.
+Dec 13 11:45:13 localhost systemd[1]: Started Session c5 of user root.
+Dec 13 11:45:13 localhost systemd-logind[18]: New session c5 of user root.
+Dec 13 11:45:13 localhost systemd[1]: session-c5.scope: Succeeded.
+Dec 13 11:45:13 localhost systemd-logind[18]: Session c5 logged out. Waiting for processes to exit.
+Dec 13 11:45:13 localhost systemd-logind[18]: Removed session c5.
+[guestshell@guestshell ~]$ 
+
+[guestshell@guestshell ~]$ sudo yum install net-tools
+[guestshell@guestshell ~]$ sudo yum update -y
+
+[guestshell@guestshell ~]$ python3
+Python 3.6.8 (default, Aug 24 2020, 17:57:11) 
+[GCC 8.3.1 20191121 (Red Hat 8.3.1-5)] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from cli import *
+>>> cli("show ip interface brief")
+'Interface              IP-Address      OK? Method Status                Protocol\nGigabitEthernet1       10.100.5.205    YES NVRAM  up                    up      \nGigabitEthernet2       192.168.5.12    YES NVRAM  up                    up      \nGigabitEthernet3       192.168.5.14    YES NVRAM  up                    up      \nGigabitEthernet4       192.168.5.3     YES NVRAM  up                    up      \nGigabitEthernet5       192.168.5.7     YES NVRAM  up                    up      \nGigabitEthernet6       192.168.5.10    YES NVRAM  up                    up      \nGigabitEthernet7       unassigned      YES NVRAM  administratively down down    \nGigabitEthernet8       unassigned      YES NVRAM  administratively down down    \nLoopback0              10.0.0.5        YES NVRAM  up                    up      \nVirtualPortGroup0      192.168.100.1   YES NVRAM  up                    up      \n'
+>>> 
+>>> output = cli("show ip interface brief")
+>>> output
+'Interface              IP-Address      OK? Method Status                Protocol\nGigabitEthernet1       10.100.5.205    YES NVRAM  up                    up      \nGigabitEthernet2       192.168.5.12    YES NVRAM  up                    up      \nGigabitEthernet3       192.168.5.14    YES NVRAM  up                    up      \nGigabitEthernet4       192.168.5.3     YES NVRAM  up                    up      \nGigabitEthernet5       192.168.5.7     YES NVRAM  up                    up      \nGigabitEthernet6       192.168.5.10    YES NVRAM  up                    up      \nGigabitEthernet7       unassigned      YES NVRAM  administratively down down    \nGigabitEthernet8       unassigned      YES NVRAM  administratively down down    \nLoopback0              10.0.0.5        YES NVRAM  up                    up      \nVirtualPortGroup0      192.168.100.1   YES NVRAM  up                    up      \n'
+>>> print(output)
+Interface              IP-Address      OK? Method Status                Protocol
+GigabitEthernet1       10.100.5.205    YES NVRAM  up                    up      
+GigabitEthernet2       192.168.5.12    YES NVRAM  up                    up      
+GigabitEthernet3       192.168.5.14    YES NVRAM  up                    up      
+GigabitEthernet4       192.168.5.3     YES NVRAM  up                    up      
+GigabitEthernet5       192.168.5.7     YES NVRAM  up                    up      
+GigabitEthernet6       192.168.5.10    YES NVRAM  up                    up      
+GigabitEthernet7       unassigned      YES NVRAM  administratively down down    
+GigabitEthernet8       unassigned      YES NVRAM  administratively down down    
+Loopback0              10.0.0.5        YES NVRAM  up                    up      
+VirtualPortGroup0      192.168.100.1   YES NVRAM  up                    up      
+
+>>> 
+>>> clip("show ip interface brief")
+Interface              IP-Address      OK? Method Status                Protocol
+GigabitEthernet1       10.100.5.205    YES NVRAM  up                    up      
+GigabitEthernet2       192.168.5.12    YES NVRAM  up                    up      
+GigabitEthernet3       192.168.5.14    YES NVRAM  up                    up      
+GigabitEthernet4       192.168.5.3     YES NVRAM  up                    up      
+GigabitEthernet5       192.168.5.7     YES NVRAM  up                    up      
+GigabitEthernet6       192.168.5.10    YES NVRAM  up                    up      
+GigabitEthernet7       unassigned      YES NVRAM  administratively down down    
+GigabitEthernet8       unassigned      YES NVRAM  administratively down down    
+Loopback0              10.0.0.5        YES NVRAM  up                    up      
+VirtualPortGroup0      192.168.100.1   YES NVRAM  up                    up      
+
+[guestshell@guestshell ~]$ exit
+exit
+
+cml-dist-rtr01#
+
